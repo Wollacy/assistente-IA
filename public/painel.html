@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Painel de Estabelecimentos</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 10px;
+    }
+
+    input,
+    select,
+    textarea,
+    button {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .row>* {
+      flex: 1;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>📋 Gerenciar Estabelecimentos</h1>
+
+  <label for="estabelecimentos">Selecionar Estabelecimento:</label>
+  <div class="row">
+    <select id="estabelecimentos"></select>
+    <button type="button" onclick="novoEstabelecimento()">Novo</button>
+    <button type="button" onclick="excluirEstabelecimento()">🗑️ Excluir</button>
+  </div>
+
+  <div id="controle-uso" style="margin-top: 20px; display: none;">
+    <label>Uso de mensagens neste mês:</label>
+    <progress id="barra-uso" value="0" max="100" style="width: 100%; height: 25px;"></progress>
+    <div id="texto-uso" style="margin-top: 5px; text-align: center;">0 de 2000 mensagens usadas</div>
+  </div>
+
+  <form onsubmit="salvarEstabelecimento(); return false;">
+    <input type="hidden" id="estabelecimento-id">
+
+    <label for="nome">Nome do Estabelecimento:</label>
+    <input type="text" id="nome" required>
+
+    <label for="ramo">Ramo de Atividade:</label>
+    <input type="text" id="ramo" required>
+
+    <label for="telefone">Telefone:</label>
+    <input type="text" id="telefone" placeholder="Digite o telefone..." required>
+
+    <label for="email">E-mail:</label>
+    <input type="email" id="email" placeholder="exemplo@email.com">
+
+    <label for="plano">Plano:</label>
+    <select id="plano">
+      <option value="Básico">Básico</option>
+      <option value="Intermediário">Intermediário</option>
+      <option value="Avançado">Avançado</option>
+    </select>
+
+    <label for="contexto">Contexto da IA:</label>
+    <textarea id="contexto" rows="6"></textarea>
+
+    <button type="submit">💾 Salvar</button>
+  </form>
+
+  <script>
+    const url = '/api/estabelecimentos';
+    let estabelecimentos = [];
+
+    async function carregarEstabelecimentos() {
+      const res = await fetch(url);
+      estabelecimentos = await res.json();
+
+      const select = document.getElementById('estabelecimentos');
+      select.innerHTML = '';
+
+      const optionVazio = document.createElement('option');
+      optionVazio.textContent = 'Selecione...';
+      optionVazio.disabled = true;
+      optionVazio.selected = true;
+      select.appendChild(optionVazio);
+
+      estabelecimentos.forEach(e => {
+        const option = document.createElement('option');
+        option.value = e.id;
+        option.textContent = e.nome;
+        select.appendChild(option);
+      });
+    }
+
+    function preencherFormulario(estab) {
+      document.getElementById('estabelecimento-id').value = estab.id || '';
+      document.getElementById('nome').value = estab.nome || '';
+      document.getElementById('ramo').value = estab.ramo_atividade || '';
+      document.getElementById('telefone').value = estab.telefone || '';
+      document.getElementById('email').value = estab.email || '';
+      document.getElementById('contexto').value = estab.contexto || '';
+      document.getElementById('plano').value = estab.plano || 'Básico';
+    }
+
+    function novoEstabelecimento() {
+      document.getElementById('estabelecimento-id').value = '';
+      document.getElementById('nome').value = '';
+      document.getElementById('ramo').value = '';
+      document.getElementById('telefone').value = '';
+      document.getElementById('contexto').value = '';
+      document.getElementById('estabelecimentos').selectedIndex = 0;
+      document.getElementById('email').value = '';
+      document.getElementById('plano').value = 'Básico';
+
+    }
+
+    async function salvarEstabelecimento() {
+      const id = document.getElementById('estabelecimento-id').value;
+      const nome = document.getElementById('nome').value;
+      const ramo = document.getElementById('ramo').value;
+      const contexto = document.getElementById('contexto').value;
+      const telefone = document.getElementById('telefone').value;
+      const email = document.getElementById('email').value;
+      const plano = document.getElementById('plano').value;
+
+      const dados = { nome, ramo_atividade: ramo, contexto, telefone, email, plano };
+      console.log('Dados a enviar:', dados);
+
+      try {
+        let res;
+        let resposta;
+
+        if (id) {
+          // Atualização
+          res = await fetch(`${url}/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(dados),
+          });
+        } else {
+          // Novo cadastro
+          res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(dados),
+          });
+        }
+
+        resposta = await res.json();
+
+        if (!res.ok) {
+          alert(`Erro: ${resposta.mensagem}`);
+          return; // ⚠️ Não prossegue com limpar campos nem carregar lista
+        }
+
+        alert(resposta.mensagem || (id ? 'Estabelecimento atualizado!' : 'Estabelecimento criado!'));
+        await carregarEstabelecimentos();
+        novoEstabelecimento(); // ✅ Só limpa se deu certo
+      } catch (erro) {
+        console.error('❌ Erro inesperado:', erro);
+        alert('Erro inesperado ao salvar o estabelecimento.');
+      }
+    }
+
+    async function carregarUsoMensagens(id) {
+      const usoRes = await fetch(`/api/estabelecimentos/${id}/uso-mensal`);
+      if (!usoRes.ok) return document.getElementById('controle-uso').style.display = 'none';
+
+      const { usado, limite } = await usoRes.json();
+      const barra = document.getElementById('barra-uso');
+      const texto = document.getElementById('texto-uso');
+
+      const percentual = Math.min(100, Math.round((usado / limite) * 100));
+      barra.value = percentual;
+      barra.max = 100;
+
+      let aviso = '';
+      if (percentual >= 80 && percentual < 100) {
+        aviso = ' ⚠️ Aproximando do limite.';
+      } else if (percentual >= 100) {
+        aviso = ' 🚫 Limite atingido.';
+      }
+
+      texto.textContent = `${usado} de ${limite} mensagens usadas (${percentual}%)${aviso}`;
+      document.getElementById('controle-uso').style.display = 'block';
+
+    }
+
+    document.getElementById('estabelecimentos').addEventListener('change', async (e) => {
+      const id = e.target.value;
+      const res = await fetch(`${url}/${id}`);
+      const est = await res.json();
+      preencherFormulario(est);
+      await carregarUsoMensagens(est.id);
+    });
+
+    async function excluirEstabelecimento() {
+      const id = document.getElementById('estabelecimento-id').value;
+      if (!id) {
+        alert('Nenhum estabelecimento selecionado para excluir.');
+        return;
+      }
+
+      const confirmacao = confirm('Tem certeza que deseja excluir este estabelecimento? Esta ação não pode ser desfeita.');
+      if (!confirmacao) return;
+
+      const res = await fetch(`${url}/${id}`, {
+        method: 'DELETE'
+      });
+
+      if (res.ok) {
+        alert('Estabelecimento excluído com sucesso.');
+        await carregarEstabelecimentos();
+        novoEstabelecimento();
+      } else {
+        alert('Erro ao excluir o estabelecimento.');
+      }
+    }
+
+    carregarEstabelecimentos();
+  </script>
+
+</body>
+
+</html>

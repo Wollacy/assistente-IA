@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Painel de Academias</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 2rem auto; }
+    label, input, textarea, button, select { display: block; width: 100%; margin-bottom: 1rem; font-size: 1rem; }
+    textarea { height: 150px; }
+  </style>
+</head>
+<body>
+  <h1>Painel da Academia</h1>
+
+  <label for="academia">Selecionar Academia:</label>
+  <select id="academia"></select>
+
+  <label for="nome">Nome:</label>
+  <input type="text" id="nome" />
+
+  <label for="contexto">Contexto:</label>
+  <textarea id="contexto"></textarea>
+
+  <button id="salvar">Salvar</button>
+  <button id="nova">Criar nova academia</button>
+
+  <div id="status"></div>
+
+  <script>
+    let academias = [];
+    let academiaAtiva = '';
+
+    async function carregarAcademias() {
+      const resLista = await fetch('http://localhost:3000/api/contexto/lista');
+      academias = await resLista.json();
+
+      const select = document.getElementById('academia');
+      select.innerHTML = '';
+
+      academias.forEach(a => {
+        const option = document.createElement('option');
+        option.value = a.id;
+        option.textContent = a.nome;
+        select.appendChild(option);
+      });
+
+      const ativaRes = await fetch('http://localhost:3000/api/contexto');
+      const ativa = await ativaRes.json();
+      academiaAtiva = ativa.id;
+      select.value = ativa.id;
+      document.getElementById('nome').value = ativa.nome;
+      document.getElementById('contexto').value = ativa.contexto;
+    }
+
+    async function salvar() {
+      const id = document.getElementById('academia').value;
+      const nome = document.getElementById('nome').value.trim();
+      const contexto = document.getElementById('contexto').value.trim();
+      const status = document.getElementById('status');
+
+      if (!nome || !contexto) {
+        status.textContent = 'Preencha todos os campos';
+        return;
+      }
+
+      const res = await fetch(`http://localhost:3000/api/contexto/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome, contexto }),
+      });
+
+      if (res.ok) {
+        status.textContent = 'Contexto salvo';
+        await carregarAcademias();
+      } else {
+        status.textContent = 'Erro ao salvar';
+      }
+    }
+
+    async function trocarAcademia(event) {
+      const novaId = event.target.value;
+      await fetch(`http://localhost:3000/api/contexto/ativa/${novaId}`, { method: 'POST' });
+      await carregarAcademias();
+    }
+
+    async function criarNovaAcademia() {
+      const nome = prompt('Nome da nova academia:');
+      const id = nome.toLowerCase().replace(/\s+/g, '-');
+
+      const res = await fetch(`http://localhost:3000/api/contexto/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nome,
+          contexto: 'Edite aqui o contexto da nova academia...',
+        }),
+      });
+
+      if (res.ok) {
+        await fetch(`http://localhost:3000/api/contexto/ativa/${id}`, { method: 'POST' });
+        await carregarAcademias();
+      } else {
+        alert('Erro ao criar academia');
+      }
+    }
+
+    document.getElementById('salvar').addEventListener('click', salvar);
+    document.getElementById('nova').addEventListener('click', criarNovaAcademia);
+    document.getElementById('academia').addEventListener('change', trocarAcademia);
+    window.onload = carregarAcademias;
+  </script>
+</body>
+</html>

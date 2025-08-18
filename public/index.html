@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Testar Assistente</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 700px; margin: auto; padding: 20px; }
+    label { display: block; margin-top: 15px; font-weight: bold; }
+    input, textarea, button { width: 100%; padding: 8px; margin-top: 5px; }
+    textarea { resize: vertical; }
+    .resposta { background-color: #f0f0f0; padding: 10px; border-radius: 5px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1>🤖 Testar Assistente</h1>
+
+  <label for="telefone">Telefone do cliente (simulação):</label>
+  <input type="text" id="telefone" placeholder="Ex: 47999999999" required>
+
+  <label for="mensagem">Mensagem do cliente:</label>
+  <textarea id="mensagem" rows="4" placeholder="Digite a pergunta do cliente..."></textarea>
+
+  <button onclick="enviarMensagem()">📨 Enviar</button>
+
+  <div id="resposta" class="resposta" style="display:none;"></div>
+
+  <script>
+    async function enviarMensagem() {
+      const telefone = document.getElementById('telefone').value.trim();
+      const mensagem = document.getElementById('mensagem').value.trim();
+      const respostaDiv = document.getElementById('resposta');
+
+      respostaDiv.style.display = 'none';
+      respostaDiv.textContent = '';
+      
+      if (!telefone || !mensagem) {
+        alert('Informe o telefone e a mensagem.');
+        return;
+      }
+
+      try {
+        // CORREÇÃO AQUI: Mudança da URL para o endpoint correto no backend
+        const res = await fetch('/api/estabelecimentos/testar-mensagem', { // <--- AQUI ESTÁ A MUDANÇA
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ telefone: telefone, mensagem: mensagem })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          respostaDiv.textContent = data.resposta || 'Resposta recebida com sucesso.';
+        } else {
+          // Aqui a mensagem de erro pode vir de 'erro' ou 'mensagem', dependendo do backend
+          respostaDiv.textContent = data.erro || data.mensagem || 'Erro ao enviar a mensagem.';
+        }
+        respostaDiv.style.display = 'block';
+      } catch (err) {
+        respostaDiv.textContent = 'Erro ao conectar com o servidor.';
+        respostaDiv.style.display = 'block';
+      }
+    }
+  </script>
+</body>
+</html>
