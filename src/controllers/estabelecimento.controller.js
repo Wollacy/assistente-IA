@@ -161,7 +161,7 @@ async function consultarUsoMensal(req, res) {
     if (!estabelecimento) return res.status(404).json({ mensagem: 'Estabelecimento não encontrado.' });
 
     const plano = estabelecimento.plano || 'Básico';
-    const limites = { 'Básico': 2, 'Intermediário': 5, 'Avançado': 10 };
+    const limites = { 'Básico': 2000, 'Intermediário': 5000, 'Avançado': 10000, 'Ilimitado': 9999999 };
     const limite = limites[plano] || 2;
 
     const registro = await knex('limites_mensais')

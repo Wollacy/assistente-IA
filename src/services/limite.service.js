@@ -2,9 +2,10 @@
 const knex = require('../database/db');
 
 const limitesPorPlano = {
-  'Básico': 2,          // 2000 Mensagens (durante testes você usa 2)
-  'Intermediário': 5,   // 5000 Mensagens
-  'Avançado': 10        // 10000 Mensagens
+  'Básico': 2000,          // 2.000 Mensagens (durante testes você usa 2)
+  'Intermediário': 5000,   // 5.000 Mensagens
+  'Avançado': 10000,        // 10.000 Mensagens
+  'Ilimitado': 9999999      // 9.999.999 Mensagens
 };
 
 async function registrarUsoMensagem(estabelecimentoId) {
