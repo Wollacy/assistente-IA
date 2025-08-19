@@ -31,7 +31,7 @@
     let academiaAtiva = '';
 
     async function carregarAcademias() {
-      const resLista = await fetch('http://localhost:3000/api/contexto/lista');
+      const resLista = await fetch('https://assistente-ia-production.up.railway.app/api/contexto/lista');
       academias = await resLista.json();
 
       const select = document.getElementById('academia');
@@ -44,7 +44,7 @@
         select.appendChild(option);
       });
 
-      const ativaRes = await fetch('http://localhost:3000/api/contexto');
+      const ativaRes = await fetch('https://assistente-ia-production.up.railway.app/api/contexto');
       const ativa = await ativaRes.json();
       academiaAtiva = ativa.id;
       select.value = ativa.id;
@@ -63,7 +63,7 @@
         return;
       }
 
-      const res = await fetch(`http://localhost:3000/api/contexto/${id}`, {
+      const res = await fetch(`https://assistente-ia-production.up.railway.app/api/contexto/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nome, contexto }),
@@ -79,7 +79,7 @@
 
     async function trocarAcademia(event) {
       const novaId = event.target.value;
-      await fetch(`http://localhost:3000/api/contexto/ativa/${novaId}`, { method: 'POST' });
+      await fetch(`https://assistente-ia-production.up.railway.app/api/contexto/ativa/${novaId}`, { method: 'POST' });
       await carregarAcademias();
     }
 
@@ -87,7 +87,7 @@
       const nome = prompt('Nome da nova academia:');
       const id = nome.toLowerCase().replace(/\s+/g, '-');
 
-      const res = await fetch(`http://localhost:3000/api/contexto/${id}`, {
+      const res = await fetch(`https://assistente-ia-production.up.railway.app/api/contexto/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -97,7 +97,7 @@
       });
 
       if (res.ok) {
-        await fetch(`http://localhost:3000/api/contexto/ativa/${id}`, { method: 'POST' });
+        await fetch(`https://assistente-ia-production.up.railway.app/api/contexto/ativa/${id}`, { method: 'POST' });
         await carregarAcademias();
       } else {
         alert('Erro ao criar academia');
