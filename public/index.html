@@ -39,8 +39,8 @@
       }
 
       try {
-        // CORREÇÃO AQUI: Mudança da URL para o endpoint correto no backend
-        const res = await fetch('/api/estabelecimentos/testar-mensagem', { // <--- AQUI ESTÁ A MUDANÇA
+        // Mudança da URL para o endpoint correto no backend
+        const res = await fetch('/api/estabelecimentos/testar-mensagem', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ telefone: telefone, mensagem: mensagem })
