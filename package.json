@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "migrate": "knex migrate:latest --env production"
+    "migrate": "knex migrate:latest --env production",
+    "rollback": "knex migrate:rollback --env production",
+    "seed": "knex seed:run --env production"
   },
   "keywords": [],
   "author": "",
