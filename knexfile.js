@@ -1,4 +1,6 @@
 // knexfile.js
+require('dotenv').config();
+
 module.exports = {
   development: {
     client: 'pg',
@@ -20,11 +22,12 @@ module.exports = {
   production: {
     client: 'pg',
     connection: {
-      host: process.env.PGHOST,
-      user: process.env.PGUSER,
-      password: process.env.PGPASSWORD,
-      database: process.env.PGDATABASE,
-      port: process.env.PGPORT
+      host: process.env.PGHOST || process.env.POSTGRES_HOST,
+      user: process.env.PGUSER || process.env.POSTGRES_USER,
+      password: process.env.PGPASSWORD || process.env.POSTGRES_PASSWORD,
+      database: process.env.PGDATABASE || process.env.POSTGRES_DB,
+      port: process.env.PGPORT || 5432,
+      ssl: { rejectUnauthorized: false } // Railway geralmente precisa de SSL
     },
     migrations: {
       directory: './src/database/migrations'
