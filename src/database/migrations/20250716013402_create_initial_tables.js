@@ -8,9 +8,7 @@ exports.up = function(knex) {
         nome TEXT NOT NULL,
         ramo_atividade TEXT,
         telefone TEXT NOT NULL,
-        contexto TEXT,
-        plano VARCHAR NOT NULL DEFAULT 'Básico',
-        email VARCHAR NOT NULL DEFAULT ''
+        contexto TEXT
     );
   `);
 };
