@@ -35,55 +35,115 @@
     .row>* {
       flex: 1;
     }
+
+    #login {
+      text-align: center;
+      margin-top: 100px;
+    }
+
+    #login input {
+      width: 60%;
+      margin: 10px auto;
+      display: block;
+    }
+
+    #painel {
+      display: none;
+    }
   </style>
 </head>
 
 <body>
-  <h1>📋 Gerenciar Estabelecimentos</h1>
-
-  <label for="estabelecimentos">Selecionar Estabelecimento:</label>
-  <div class="row">
-    <select id="estabelecimentos"></select>
-    <button type="button" onclick="novoEstabelecimento()">Novo</button>
-    <button type="button" onclick="excluirEstabelecimento()">🗑️ Excluir</button>
+  <!-- Tela de Login -->
+  <div id="login">
+    <h2>🔐 Acesso Restrito</h2>
+    <input type="text" id="user" placeholder="Usuário">
+    <input type="password" id="pass" placeholder="Senha">
+    <button onclick="login()">Entrar</button>
   </div>
 
-  <div id="controle-uso" style="margin-top: 20px; display: none;">
-    <label>Uso de mensagens neste mês:</label>
-    <progress id="barra-uso" value="0" max="100" style="width: 100%; height: 25px;"></progress>
-    <div id="texto-uso" style="margin-top: 5px; text-align: center;">0 de 2000 mensagens usadas</div>
+  <!-- Painel Principal -->
+  <div id="painel">
+    <button onclick="logout()" style="float:right;">Sair</button>
+    <h1>📋 Gerenciar Estabelecimentos</h1>
+
+    <label for="estabelecimentos">Selecionar Estabelecimento:</label>
+    <div class="row">
+      <select id="estabelecimentos"></select>
+      <button type="button" onclick="novoEstabelecimento()">Novo</button>
+      <button type="button" onclick="excluirEstabelecimento()">🗑️ Excluir</button>
+    </div>
+
+    <div id="controle-uso" style="margin-top: 20px; display: none;">
+      <label>Uso de mensagens neste mês:</label>
+      <progress id="barra-uso" value="0" max="100" style="width: 100%; height: 25px;"></progress>
+      <div id="texto-uso" style="margin-top: 5px; text-align: center;">0 de 2000 mensagens usadas</div>
+    </div>
+
+    <form onsubmit="salvarEstabelecimento(); return false;">
+      <input type="hidden" id="estabelecimento-id">
+
+      <label for="nome">Nome do Estabelecimento:</label>
+      <input type="text" id="nome" required>
+
+      <label for="ramo">Ramo de Atividade:</label>
+      <input type="text" id="ramo" required>
+
+      <label for="telefone">Telefone:</label>
+      <input type="text" id="telefone" placeholder="Digite o telefone..." required>
+
+      <label for="email">E-mail:</label>
+      <input type="email" id="email" placeholder="exemplo@email.com">
+
+      <label for="plano">Plano:</label>
+      <select id="plano">
+        <option value="Básico">Básico</option>
+        <option value="Intermediário">Intermediário</option>
+        <option value="Avançado">Avançado</option>
+        <option value="Ilimitado">Ilimitado</option>
+      </select>
+
+      <label for="contexto">Contexto da IA:</label>
+      <textarea id="contexto" rows="6"></textarea>
+
+      <button type="submit">💾 Salvar</button>
+    </form>
   </div>
-
-  <form onsubmit="salvarEstabelecimento(); return false;">
-    <input type="hidden" id="estabelecimento-id">
-
-    <label for="nome">Nome do Estabelecimento:</label>
-    <input type="text" id="nome" required>
-
-    <label for="ramo">Ramo de Atividade:</label>
-    <input type="text" id="ramo" required>
-
-    <label for="telefone">Telefone:</label>
-    <input type="text" id="telefone" placeholder="Digite o telefone..." required>
-
-    <label for="email">E-mail:</label>
-    <input type="email" id="email" placeholder="exemplo@email.com">
-
-    <label for="plano">Plano:</label>
-    <select id="plano">
-      <option value="Básico">Básico</option>
-      <option value="Intermediário">Intermediário</option>
-      <option value="Avançado">Avançado</option>
-      <option value="Ilimitado">Ilimitado</option>
-    </select>
-
-    <label for="contexto">Contexto da IA:</label>
-    <textarea id="contexto" rows="6"></textarea>
-
-    <button type="submit">💾 Salvar</button>
-  </form>
 
   <script>
+    // Usuário e senha fixos
+    const USER = "Wollacy";
+    const PASS = "180790";
+
+    function checkLogin() {
+      const loggedIn = localStorage.getItem("isLoggedIn");
+      if (loggedIn) {
+        document.getElementById("login").style.display = "none";
+        document.getElementById("painel").style.display = "block";
+        carregarEstabelecimentos();
+      } else {
+        document.getElementById("login").style.display = "block";
+        document.getElementById("painel").style.display = "none";
+      }
+    }
+
+    function login() {
+      const user = document.getElementById("user").value;
+      const pass = document.getElementById("pass").value;
+      if (user === USER && pass === PASS) {
+        localStorage.setItem("isLoggedIn", "true");
+        checkLogin();
+      } else {
+        alert("Usuário ou senha inválidos!");
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem("isLoggedIn");
+      checkLogin();
+    }
+
+    // --- Código original do painel ---
     const url = '/api/estabelecimentos';
     let estabelecimentos = [];
 
@@ -127,7 +187,6 @@
       document.getElementById('estabelecimentos').selectedIndex = 0;
       document.getElementById('email').value = '';
       document.getElementById('plano').value = 'Básico';
-
     }
 
     async function salvarEstabelecimento() {
@@ -147,14 +206,12 @@
         let resposta;
 
         if (id) {
-          // Atualização
           res = await fetch(`${url}/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(dados),
           });
         } else {
-          // Novo cadastro
           res = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -166,12 +223,12 @@
 
         if (!res.ok) {
           alert(`Erro: ${resposta.mensagem}`);
-          return; // ⚠️ Não prossegue com limpar campos nem carregar lista
+          return;
         }
 
         alert(resposta.mensagem || (id ? 'Estabelecimento atualizado!' : 'Estabelecimento criado!'));
         await carregarEstabelecimentos();
-        novoEstabelecimento(); // ✅ Só limpa se deu certo
+        novoEstabelecimento();
       } catch (erro) {
         console.error('❌ Erro inesperado:', erro);
         alert('Erro inesperado ao salvar o estabelecimento.');
@@ -199,7 +256,6 @@
 
       texto.textContent = `${usado} de ${limite} mensagens usadas (${percentual}%)${aviso}`;
       document.getElementById('controle-uso').style.display = 'block';
-
     }
 
     document.getElementById('estabelecimentos').addEventListener('change', async (e) => {
@@ -233,7 +289,7 @@
       }
     }
 
-    carregarEstabelecimentos();
+    window.onload = checkLogin;
   </script>
 
 </body>
