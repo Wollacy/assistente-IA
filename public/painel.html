@@ -7,9 +7,11 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      max-width: 800px;
+      max-width: 900px;
       margin: auto;
       padding: 20px;
+      display: flex;
+      gap: 20px;
     }
 
     label {
@@ -38,7 +40,8 @@
 
     #login {
       text-align: center;
-      margin-top: 100px;
+      margin: auto;
+      width: 100%;
     }
 
     #login input {
@@ -49,6 +52,37 @@
 
     #painel {
       display: none;
+      flex: 1;
+    }
+
+    /* Barra lateral de uso */
+    #controle-uso {
+      width: 80px;
+      text-align: center;
+    }
+
+    #container-barra {
+      width: 30px;
+      height: 200px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      overflow: hidden;
+      background: #eee;
+      margin: auto;
+      display: flex;
+      align-items: flex-end;
+    }
+
+    #barra-uso {
+      width: 100%;
+      height: 0%;
+      background: green;
+      transition: height 0.5s, background 0.5s;
+    }
+
+    #texto-uso {
+      margin-top: 10px;
+      font-size: 12px;
     }
   </style>
 </head>
@@ -72,12 +106,6 @@
       <select id="estabelecimentos"></select>
       <button type="button" onclick="novoEstabelecimento()">Novo</button>
       <button type="button" onclick="excluirEstabelecimento()">🗑️ Excluir</button>
-    </div>
-
-    <div id="controle-uso" style="margin-top: 20px; display: none;">
-      <label>Uso de mensagens neste mês:</label>
-      <progress id="barra-uso" value="0" max="100" style="width: 100%; height: 25px;"></progress>
-      <div id="texto-uso" style="margin-top: 5px; text-align: center;">0 de 2000 mensagens usadas</div>
     </div>
 
     <form onsubmit="salvarEstabelecimento(); return false;">
@@ -110,6 +138,15 @@
     </form>
   </div>
 
+  <!-- Barra de uso lateral -->
+  <div id="controle-uso" style="display: none;">
+    <label>Uso do mês</label>
+    <div id="container-barra">
+      <div id="barra-uso"></div>
+    </div>
+    <div id="texto-uso">0 de 2000</div>
+  </div>
+
   <script>
     // Usuário e senha fixos
     const USER = "Wollacy";
@@ -120,10 +157,12 @@
       if (loggedIn) {
         document.getElementById("login").style.display = "none";
         document.getElementById("painel").style.display = "block";
+        document.getElementById("controle-uso").style.display = "block";
         carregarEstabelecimentos();
       } else {
         document.getElementById("login").style.display = "block";
         document.getElementById("painel").style.display = "none";
+        document.getElementById("controle-uso").style.display = "none";
       }
     }
 
@@ -244,17 +283,18 @@
       const texto = document.getElementById('texto-uso');
 
       const percentual = Math.min(100, Math.round((usado / limite) * 100));
-      barra.value = percentual;
-      barra.max = 100;
+      barra.style.height = `${percentual}%`;
 
-      let aviso = '';
-      if (percentual >= 80 && percentual < 100) {
-        aviso = ' ⚠️ Aproximando do limite.';
-      } else if (percentual >= 100) {
-        aviso = ' 🚫 Limite atingido.';
+      // Cor conforme percentual
+      if (percentual <= 50) {
+        barra.style.background = "green";
+      } else if (percentual <= 90) {
+        barra.style.background = "orange";
+      } else {
+        barra.style.background = "red";
       }
 
-      texto.textContent = `${usado} de ${limite} mensagens usadas (${percentual}%)${aviso}`;
+      texto.textContent = `${usado} de ${limite} mensagens (${percentual}%)`;
       document.getElementById('controle-uso').style.display = 'block';
     }
 
