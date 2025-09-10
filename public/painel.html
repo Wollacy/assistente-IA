@@ -276,26 +276,39 @@
 
     async function carregarUsoMensagens(id) {
       const usoRes = await fetch(`/api/estabelecimentos/${id}/uso-mensal`);
-      if (!usoRes.ok) return document.getElementById('controle-uso').style.display = 'none';
-
-      const { usado, limite } = await usoRes.json();
       const barra = document.getElementById('barra-uso');
       const texto = document.getElementById('texto-uso');
+      const container = document.getElementById('controle-uso');
 
-      const percentual = Math.min(100, Math.round((usado / limite) * 100));
-      barra.style.height = `${percentual}%`;
-
-      // Cor conforme percentual
-      if (percentual <= 50) {
-        barra.style.background = "green";
-      } else if (percentual <= 90) {
-        barra.style.background = "orange";
-      } else {
-        barra.style.background = "red";
+      if (!usoRes.ok) {
+        container.style.display = 'none';
+        return;
       }
 
-      texto.textContent = `${usado} de ${limite} mensagens (${percentual}%)`;
-      document.getElementById('controle-uso').style.display = 'block';
+      const { usado, limite } = await usoRes.json();
+      const percentual = Math.min(100, Math.round((usado / limite) * 100));
+
+      // Sempre mostra o container
+      container.style.display = 'block';
+
+      // Ajusta altura da barra
+      barra.style.height = percentual + '%';
+
+      // Define cor pela regra
+      if (percentual <= 50) {
+        barra.style.background = 'green';
+      } else if (percentual <= 90) {
+        barra.style.background = 'orange';
+      } else {
+        barra.style.background = 'red';
+      }
+
+      // Texto
+      let aviso = '';
+      if (percentual > 90) aviso = ' 🚨 Limite quase estourado!';
+      else if (percentual > 50) aviso = ' ⚠️ Aproximando do limite.';
+
+      texto.textContent = `${usado} de ${limite} mensagens usadas (${percentual}%)${aviso}`;
     }
 
     document.getElementById('estabelecimentos').addEventListener('change', async (e) => {
